@@ -1,0 +1,611 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Repayment Plan Eligibility Tool</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=Lato:wght@400;700&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --navy:#1B3055;--navy-light:#243F72;--teal:#1A6B5A;
+  --amber:#FDF3E3;--amber-bdr:#D4A83A;
+  --slate:#F2F4F8;--border:#D8DCE8;--text:#1A1A2E;--muted:#5A6070;--white:#FFFFFF;
+  --pslf:#1A4D8F;--pslf-bg:#E8F0FF;--pslf-bdr:#6888CC;
+  --other-bg:#F5F5F3;--other-bdr:#BABAB0;
+  --maybe-bg:#FFF3E0;--maybe-bdr:#E0891A;--maybe-txt:#7A3F00;
+}
+body{font-family:'Lato',sans-serif;background:var(--slate);color:var(--text);min-height:100vh;padding-bottom:60px}
+.site-header{background:var(--navy);padding:28px 24px 22px;text-align:center}
+.site-header h1{font-family:'Playfair Display',serif;font-size:clamp(20px,4vw,34px);color:#fff;line-height:1.2;margin-bottom:6px}
+.site-header p{font-size:14px;color:#A8B8CC;max-width:580px;margin:0 auto;line-height:1.6}
+.card-wrap{max-width:800px;margin:28px auto 0;padding:0 18px}
+.card{background:#fff;border-radius:16px;border:1px solid var(--border);box-shadow:0 2px 16px rgba(0,0,0,.06);overflow:hidden;animation:fadeUp .3s ease}
+@keyframes fadeUp{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+.prog-wrap{display:flex;align-items:center;gap:12px;padding:14px 24px;border-bottom:1px solid var(--border);background:#FAFBFC}
+.prog-bg{flex:1;height:6px;background:var(--border);border-radius:3px;overflow:hidden}
+.prog-fill{height:100%;background:var(--navy);border-radius:3px;transition:width .4s ease}
+.prog-label{font-size:12px;color:var(--muted);white-space:nowrap;font-weight:700;letter-spacing:.04em}
+.intro-strip{background:var(--amber);border-bottom:1px solid var(--amber-bdr);padding:13px 24px;font-size:13px;color:var(--warn-txt);line-height:1.6}
+.intro-strip strong{color:var(--navy)}
+.q-body{padding:30px 28px 24px}
+.step-eyebrow{font-size:11px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin-bottom:10px}
+.q-text{font-family:'Playfair Display',serif;font-size:clamp(17px,2.8vw,23px);color:var(--navy);line-height:1.4;margin-bottom:6px}
+.q-sub{font-size:13px;color:var(--muted);font-style:italic;margin-bottom:26px;line-height:1.5}
+.btn-group{display:flex;flex-direction:column;gap:10px}
+.btn-choice{width:100%;padding:15px 18px;border-radius:10px;border:2px solid var(--border);background:var(--slate);font-family:'Lato',sans-serif;font-size:15px;font-weight:700;color:var(--text);cursor:pointer;text-align:left;transition:all .15s ease;line-height:1.4}
+.btn-choice:hover{border-color:var(--navy);background:var(--pslf-bg);color:var(--navy);transform:translateX(3px)}
+.btn-sub{display:block;font-weight:400;font-size:12px;color:var(--muted);margin-top:3px}
+.btn-choice:hover .btn-sub{color:var(--pslf)}
+.nav-row{display:flex;justify-content:space-between;align-items:center;padding:18px 28px;border-top:1px solid var(--border);gap:12px}
+.btn-back{background:none;border:1px solid var(--border);border-radius:8px;padding:9px 16px;font-family:'Lato',sans-serif;font-size:13px;color:var(--muted);cursor:pointer;transition:all .15s}
+.btn-back:hover{border-color:var(--navy);color:var(--navy)}
+.btn-restart{background:var(--navy);border:none;border-radius:8px;padding:11px 20px;font-family:'Lato',sans-serif;font-size:14px;font-weight:700;color:#fff;cursor:pointer;transition:background .15s}
+.btn-restart:hover{background:var(--navy-light)}
+.result-body{padding:28px 28px 32px}
+.result-title{font-family:'Playfair Display',serif;font-size:clamp(16px,2.5vw,22px);color:var(--navy);margin-bottom:6px}
+.result-subtitle{font-size:13px;color:var(--muted);margin-bottom:22px;line-height:1.6}
+.loan-bucket{margin-bottom:22px}
+.bucket-label{font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin-bottom:10px;padding-bottom:6px;border-bottom:1px solid var(--border)}
+.plan-row{display:flex;align-items:flex-start;gap:10px;padding:11px 14px;border-radius:8px;margin-bottom:8px;border:1px solid transparent}
+.plan-row.pslf-yes{background:var(--pslf-bg);border-color:var(--pslf-bdr)}
+.plan-row.pslf-no{background:var(--other-bg);border-color:var(--other-bdr)}
+.plan-row.pslf-maybe{background:var(--maybe-bg);border-color:var(--maybe-bdr)}
+.plan-badge{flex-shrink:0;font-size:10px;font-weight:700;letter-spacing:.05em;padding:3px 7px;border-radius:4px;margin-top:2px;white-space:nowrap}
+.plan-badge.yes{background:var(--pslf);color:#fff}
+.plan-badge.no{background:var(--other-bdr);color:#fff}
+.plan-badge.maybe{background:var(--maybe-bdr);color:#fff}
+.plan-name{font-size:15px;font-weight:700;color:var(--text);line-height:1.3}
+.plan-note{font-size:12px;color:var(--muted);margin-top:3px;line-height:1.5}
+.plan-note strong{color:var(--text)}
+.note-box{background:var(--warn-bg);border:1px solid var(--warn-bdr);border-radius:10px;padding:14px 18px;margin-top:8px;font-size:13px;color:var(--warn-txt);line-height:1.6}
+.note-box+.note-box{margin-top:8px}
+.note-box strong{color:var(--navy)}
+.reminder{background:var(--slate);border:1px solid var(--border);border-radius:10px;padding:13px 18px;margin-top:14px;font-size:13px;color:var(--muted);line-height:1.6}
+.reminder strong{color:var(--text)}
+.reminder a{color:var(--teal)}
+.formula-section{margin-top:20px}
+.formula-toggle{width:100%;background:none;border:1px solid var(--border);border-radius:8px;padding:11px 16px;font-family:'Lato',sans-serif;font-size:13px;font-weight:700;color:var(--navy);cursor:pointer;text-align:left;display:flex;justify-content:space-between;align-items:center}
+.formula-toggle:hover{background:var(--slate)}
+.formula-content{display:none;border:1px solid var(--border);border-top:none;border-radius:0 0 8px 8px;padding:16px 18px;background:#fff}
+.formula-content.open{display:block}
+.formula-item{margin-bottom:16px;padding-bottom:16px;border-bottom:1px solid var(--border)}
+.formula-item:last-child{margin-bottom:0;padding-bottom:0;border-bottom:none}
+.formula-name{font-size:13px;font-weight:700;color:var(--navy);margin-bottom:4px}
+.formula-text{font-size:13px;color:var(--text);line-height:1.7;background:var(--slate);padding:10px 14px;border-radius:6px;margin-bottom:6px}
+.formula-example{font-size:12px;color:var(--muted);line-height:1.7;padding:8px 12px;background:#fff;border:1px solid var(--border);border-radius:6px}
+.formula-example strong{color:var(--text)}
+.site-footer{max-width:800px;margin:22px auto 0;padding:0 18px;font-size:12px;color:var(--muted);line-height:1.7;text-align:center}
+.site-footer a{color:var(--teal)}
+@media(max-width:480px){
+  .q-body,.result-body{padding:22px 16px 20px}
+  .nav-row{padding:14px 16px}
+  .prog-wrap{padding:12px 16px}
+}
+</style>
+</head>
+<body>
+<header class="site-header">
+  <h1>Repayment Plan Eligibility Tool</h1>
+  <p>Answer a few questions to find out which repayment plans are available for your loans — and which qualify for PSLF.</p>
+</header>
+<div class="card-wrap">
+  <div class="card" id="quiz-card"></div>
+</div>
+<footer class="site-footer">
+  <p>This tool covers eligibility only. Not legal advice.<br>
+  Questions? Join us: <a href="https://www.facebook.com/groups/pslfprogramsupport" target="_blank">PSLF Program Support Group on Facebook</a></p>
+</footer>
+
+<script>
+// ─── STATE ────────────────────────────────────────────────────────────────────
+let answers = {};
+let history = [];
+let current = 'intro';
+
+// ─── QUESTION FLOW ────────────────────────────────────────────────────────────
+// Max 7 questions depending on path
+const QUESTIONS = {
+
+  q_newborrow: {
+    step:1, stepLabel:'Step 1 of up to 6',
+    text: 'Do you have any loans or consolidations disbursed on or after July 1, 2026?',
+    sub: 'Determined by disbursement date, not application date.',
+    choices: [
+      { label:'Yes', sub:'I have at least one loan or consolidation disbursed on or after July 1, 2026', value:'yes' },
+      { label:'No',  sub:'All of my loans were disbursed before July 1, 2026', value:'no' },
+    ],
+    onAnswer: v => { answers.newborrow = v; return 'q_hasppl'; }
+  },
+
+  q_hasppl: {
+    step:2, stepLabel:'Step 2 of up to 6',
+    text: 'Have you ever taken out a Parent PLUS Loan?',
+    sub: 'This includes Parent PLUS Loans that have since been consolidated.',
+    choices: [
+      { label:'Yes', sub:'I have or have had at least one Parent PLUS Loan', value:'yes' },
+      { label:'No',  sub:'I have never borrowed a Parent PLUS Loan', value:'no' },
+    ],
+    onAnswer: v => {
+      answers.hasppl = v;
+      if (answers.newborrow === 'yes') {
+        // new borrowing — skip PPL status and date questions entirely
+        return 'result';
+      }
+      if (v === 'no') {
+        // no PPL, no new borrowing — go to date questions
+        return 'q_pre2007';
+      }
+      return 'q_pplstatus';
+    }
+  },
+
+  q_pplstatus: {
+    step:3, stepLabel:'Step 3 of up to 6',
+    text: 'What is the current status of your Parent PLUS Loan(s)?',
+    sub: 'If you have PPLs in different situations, select the one that applies to the majority of your PPL balance.',
+    choices: [
+      { label:'Unconsolidated', sub:'My Parent PLUS Loan(s) have never been consolidated', value:'unconsolidated' },
+      { label:'Consolidated before July 1, 2026', sub:'My PPL(s) are in a consolidation loan disbursed before July 1, 2026 — with or without other loans included', value:'consolidated' },
+      { label:'Double-consolidated before July 1, 2026', sub:'My PPL consolidation was itself consolidated again before July 1, 2026', value:'doublecon' },
+    ],
+    onAnswer: v => { answers.pplstatus = v; return 'q_pre2007'; }
+  },
+
+  q_pre2007: {
+    step:4, stepLabel:'Step 4 of up to 6',
+    text: 'Did you take out any federal student loans before October 1, 2007?',
+    sub: 'This affects eligibility for PAYE (Pay As You Earn).',
+    choices: [
+      { label:'Yes', sub:'I had at least one federal student loan before October 1, 2007', value:'yes' },
+      { label:'No',  sub:'I had no federal student loans before October 1, 2007', value:'no' },
+    ],
+    onAnswer: v => {
+      answers.pre2007 = v;
+      if (v === 'yes') {
+        // definitely pre-2014, PAYE ineligible — skip both remaining date questions
+        answers.post2011 = 'inferred_no';
+        answers.pre2014  = 'yes';
+        return 'result';
+      }
+      return 'q_post2011';
+    }
+  },
+
+  q_post2011: {
+    step:5, stepLabel:'Step 5 of up to 6',
+    text: 'Did you receive at least one loan disbursed after October 1, 2011?',
+    sub: 'This is the second eligibility requirement for PAYE.',
+    choices: [
+      { label:'Yes', sub:'I received at least one loan after October 1, 2011', value:'yes' },
+      { label:'No',  sub:'All of my loans were disbursed before October 1, 2011', value:'no' },
+    ],
+    onAnswer: v => { answers.post2011 = v; return 'q_pre2014'; }
+  },
+
+
+
+  q_pre2014: {
+    step:6, stepLabel:'Step 6 of up to 6',
+    text: 'Did you take out any federal student loans before July 1, 2014?',
+    sub: 'This determines which version of IBR applies to you — original IBR (15% of discretionary income) or new IBR (10%). This applies regardless of whether those loans have since been consolidated.',
+    choices: [
+      { label:'Yes', sub:'I had at least one federal student loan before July 1, 2014', value:'yes' },
+      { label:'No',  sub:'My first federal student loan was July 1, 2014 or later', value:'no' },
+    ],
+    onAnswer: v => { answers.pre2014 = v; return 'result'; }
+  },
+};
+
+// ─── PLAN DEFINITIONS ─────────────────────────────────────────────────────────
+function getPlans(answers) {
+  const pre2014  = answers.pre2014 === 'yes';
+  const pre2007  = answers.pre2007 === 'yes';
+  const post2011 = answers.post2011 === 'yes';
+
+  const payeEligible = !pre2007 && post2011 === 'yes';
+  const ibrKey = pre2014 ? 'ibr_old' : 'ibr_new';
+
+  return { payeEligible, ibrKey };
+}
+
+const PLAN_DATA = {
+  ibr_new: {
+    name: 'IBR — Income-Based Repayment (New IBR)',
+    pslf: true,
+    note: '10% of discretionary income, capped at the 10-year standard payment amount. Forgiveness after 20 years if you don\'t complete PSLF. Available to anyone — no partial financial hardship required.',
+    formula: {
+      name: 'New IBR',
+      calc: 'Monthly payment = (AGI − 150% of poverty line for your family size) × 10% ÷ 12',
+      example: '<strong>Example:</strong> $50,000 income, family of 3\nPoverty line (150%): $37,290\nDiscretionary income: $50,000 − $37,290 = $12,710\nAnnual payment: $12,710 × 10% = $1,271\nMonthly payment: <strong>$105.92</strong>',
+      note: '2025 poverty lines (150%): 1 person = $21,870 · 2 people = $29,580 · 3 people = $37,290 · 4 people = $45,000'
+    }
+  },
+  ibr_old: {
+    name: 'IBR — Income-Based Repayment (Original IBR)',
+    pslf: true,
+    note: '15% of discretionary income, capped at the 10-year standard payment amount. Forgiveness after 25 years if you don\'t complete PSLF. Applies because you had loans before July 2014 — this applies regardless of whether those loans have since been consolidated.',
+    formula: {
+      name: 'Original IBR',
+      calc: 'Monthly payment = (AGI − 150% of poverty line for your family size) × 15% ÷ 12',
+      example: '<strong>Example:</strong> $50,000 income, family of 3\nPoverty line (150%): $37,290\nDiscretionary income: $50,000 − $37,290 = $12,710\nAnnual payment: $12,710 × 15% = $1,906.50\nMonthly payment: <strong>$158.88</strong>',
+      note: '2025 poverty lines (150%): 1 person = $21,870 · 2 people = $29,580 · 3 people = $37,290 · 4 people = $45,000'
+    }
+  },
+  paye: {
+    name: 'PAYE — Pay As You Earn',
+    pslf: true,
+    note: '<strong>Available through July 1, 2027 only — new enrollment closes after that date.</strong> 10% of discretionary income, capped at the 10-year standard payment. Forgiveness after 20 years. Requires partial financial hardship (your PAYE payment must be lower than the 10-year standard payment). If you are eligible, apply before July 1, 2027.',
+    formula: {
+      name: 'PAYE',
+      calc: 'Monthly payment = (AGI − 150% of poverty line) × 10% ÷ 12, capped at 10-year standard payment',
+      example: '<strong>Same calculation as New IBR</strong> — 10% of discretionary income. Payment is capped at the 10-year standard payment amount, so if your income is high enough that the calculation exceeds that cap, your payment equals the standard payment.',
+      note: 'Requires partial financial hardship: your calculated PAYE payment must be lower than what you would pay under a 10-year standard plan.'
+    }
+  },
+  icr: {
+    name: 'ICR — Income-Contingent Repayment',
+    pslf: true,
+    note: '<strong>Available through July 2028 only</strong> — new enrollment closes after July 2028. No income restrictions. ICR uses whichever is lower of two formulas: (A) approximately 20% of discretionary income, or (B) a fixed payment based on a 12-year term adjusted by income. For most borrowers ICR results in the highest payment of the income-driven plans — but it is worth calculating both options, as in some cases it may not be.',
+    formula: {
+      name: 'ICR',
+      calc: 'Lesser of:\n(A) (AGI − 100% of poverty line) × 20% ÷ 12\n(B) The fixed monthly payment over 12 years based on your balance and interest rate, multiplied by an income percentage factor (IPF) based on your AGI — updated annually by the Department of Education\n\nUse whichever calculation results in a lower payment. Option B is close to a 12-year standard payment but not exactly — the income adjustment means it varies by borrower. Use the loan simulator at studentaid.gov to calculate Option B accurately.',
+      example: '<strong>Example (Option A):</strong> $50,000 income, family of 3\nPoverty line (100%): $24,860\nDiscretionary income: $50,000 − $24,860 = $25,140\nAnnual payment: $25,140 × 20% = $5,028\nMonthly payment: <strong>$418.00</strong>\n\nFor Option B, use the loan simulator at studentaid.gov — it requires your specific balance, interest rate, and income percentage factor.',
+      note: '2025 poverty lines (100%): 1 person = $14,580 · 2 people = $19,720 · 3 people = $24,860 · 4 people = $30,000'
+    }
+  },
+  icr_to_ibr: {
+    name: 'ICR → IBR pathway',
+    pslf: true,
+    note: 'Consolidation loans containing a PPL are eligible for ICR first. After making at least one qualifying payment under ICR, you become eligible to switch to IBR. Both ICR and IBR qualify for PSLF. <strong>ICR is available through July 2028 only.</strong>',
+    formula: null
+  },
+  rap: {
+    name: 'RAP — Repayment Assistance Plan',
+    pslf: true,
+    note: 'New plan effective July 1, 2026. 30-year forgiveness timeline. Unpaid interest forgiven each month. Government adds money toward principal if your payment reduces it by less than $50. <strong>Time in RAP does not count toward IBR\'s 20–25 year forgiveness clock if you switch back to IBR.</strong>',
+    formula: {
+      name: 'RAP',
+      calc: 'Income bracket determines your percentage:\nUnder $10k: $120/year base · $10k–$20k: 1% · $20k–$30k: 2% · $30k–$40k: 3% · $40k–$50k: 4% · $50k–$60k: 5% · $60k–$70k: 6% · $70k–$80k: 7% · $80k–$90k: 8% · $90k–$100k: 9% · Over $100k: 10%\n\nMonthly payment = (Income × bracket %) ÷ 12 − ($50 × number of dependents)\nMinimum payment: $10/month',
+      example: '<strong>Example:</strong> $50,000 income, 2 children\nBracket: 4%\nAnnual base: $50,000 × 4% = $2,000\nMonthly base: $2,000 ÷ 12 = $166.67\nWith dependents: $166.67 − ($50 × 2) = <strong>$66.67/month</strong>',
+      note: 'Minimum payment is $10/month regardless of calculation.'
+    }
+  },
+  standard_10: {
+    name: 'Legacy Standard',
+    pslf: 'maybe',
+    note: 'For non-consolidated loans: fixed 10-year term only — qualifies for PSLF, but your loan will be paid off at 120 payments before forgiveness anyway. For consolidation loans: term is determined by your total balance at consolidation — 10, 12, 15, 20, 25, or up to 30 years for balances over $60,000. Qualifies for PSLF only if your consolidation happened to result in a 10-year term.',
+    formula: {
+      name: 'Legacy Standard',
+      calc: 'Non-consolidated loans: fixed payment over 10 years based on balance and interest rate.\nConsolidation loans: fixed payment over a term determined by total balance at consolidation:\n· Under $7,500: 10 years · $7,500–$9,999: 12 years · $10,000–$19,999: 15 years · $20,000–$39,999: 20 years · $40,000–$59,999: 25 years · $60,000+: 30 years',
+      example: 'Use the loan simulator at studentaid.gov to calculate your exact payment.',
+      note: null
+    }
+  },
+  tiered: {
+    name: 'Tiered Standard (new)',
+    pslf: false,
+    note: '<strong>Does not qualify for PSLF.</strong> Applies to your entire loan portfolio if you have any loans or consolidations disbursed on or after July 1, 2026 — including your older loans. No consolidation required; term is based on your total outstanding balance across all loans. Four fixed tiers: under $25,000 = 10 years · $25,000–$49,999 = 15 years · $50,000–$99,999 = 20 years · $100,000+ = 25 years.',
+    formula: {
+      name: 'Tiered Standard (new)',
+      calc: 'Term determined by total outstanding principal balance across all loans:\n· Under $25,000: 10 years\n· $25,000–$49,999: 15 years\n· $50,000–$99,999: 20 years\n· $100,000 or more: 25 years\n\nFixed monthly payment over that term based on balance and interest rate.',
+      example: 'Use the loan simulator at studentaid.gov to calculate your exact payment under the tiered standard plan.',
+      note: 'If you borrow even a single new federal loan on or after July 1, 2026, the tiered standard becomes the only standard option for your entire portfolio — including older loans.'
+    }
+  },
+  extended_std: {
+    name: 'Extended Standard',
+    pslf: false,
+    note: 'Does not qualify for PSLF.',
+    formula: { name:'Extended Standard', calc:'Fixed payments over up to 25 years.', example:null, note:null }
+  },
+  extended_grad: {
+    name: 'Extended Graduated',
+    pslf: false,
+    note: 'Does not qualify for PSLF.',
+    formula: { name:'Extended Graduated', calc:'Graduated payments that increase every 2 years, over up to 25 years.', example:null, note:null }
+  },
+};
+
+// ─── RESULT LOGIC ─────────────────────────────────────────────────────────────
+function getResult() {
+  const newBorrow  = answers.newborrow === 'yes';
+  const hasPPL     = answers.hasppl === 'yes';
+  const pplStatus  = answers.pplstatus;
+
+  const { payeEligible, ibrKey } = getPlans(answers);
+
+  // Full own-loan plan set (pre-7/1, no new borrowing)
+  const fullOwn = [
+    ibrKey,
+    ...(payeEligible ? ['paye'] : []),
+    'icr',
+    'rap',
+    'standard_10',
+    'tiered',
+    'extended_std',
+    'extended_grad',
+  ];
+
+  // ── CASE 1: new borrowing, no PPL ─────────────────────────────────────────
+  if (newBorrow && !hasPPL) {
+    return {
+      title: 'New borrowing after July 1, 2026 — no Parent PLUS Loans',
+      subtitle: 'Because you have loans or consolidations disbursed on or after July 1, 2026, your eligibility as a borrower is limited to the plans below. This applies to all of your loans.',
+      buckets: [
+        { label: 'All of your loans', plans: ['rap','tiered'] }
+      ],
+      notes: [
+        '<strong>Important:</strong> Having any loans or consolidations disbursed on or after July 1, 2026 changes your eligibility as a borrower — not just for those new loans. IBR, ICR, and PAYE are not available to you as a borrower, which means none of your loans are eligible for these plans, regardless of when they were originally disbursed.',
+      ],
+      formulas: ['rap','tiered'],
+    };
+  }
+
+  // ── CASE 2: new borrowing, has PPL ────────────────────────────────────────
+  if (newBorrow && hasPPL) {
+    return {
+      title: 'New borrowing after July 1, 2026 — with Parent PLUS Loans',
+      subtitle: 'Because you have loans or consolidations disbursed on or after July 1, 2026, your borrower eligibility is limited. Parent PLUS Loans and any consolidations containing a PPL are further restricted.',
+      buckets: [
+        { label: 'Your own loans / non-PPL consolidations', plans: ['rap','tiered'] },
+        { label: 'Your Parent PLUS Loans and any consolidation containing a PPL', plans: ['tiered'] },
+      ],
+      notes: [
+        '<strong>Important:</strong> Having any loans or consolidations disbursed on or after July 1, 2026 changes your eligibility as a borrower — not just for those new loans. IBR, ICR, and PAYE are not available to you as a borrower, which means none of your loans are eligible for these plans.',
+        'Any new borrowing after July 1, 2026 removes all income-driven plan eligibility from your Parent PLUS Loans — regardless of when those PPLs were originally taken out or what their consolidation status is.',
+      ],
+      formulas: ['rap','tiered'],
+    };
+  }
+
+  // ── CASE 3: no new borrowing, no PPL (or double-consolidated PPL) ─────────
+  if (!newBorrow && (!hasPPL || pplStatus === 'doublecon')) {
+    const subtitle = pplStatus === 'doublecon'
+      ? 'Because your Parent PLUS Loans were double-consolidated before July 1, 2026, they no longer carry PPL restrictions and are treated like your own loans. You have access to the full range of repayment plans.'
+      : 'All of your loans were disbursed before July 1, 2026 and you have no Parent PLUS Loans. You have access to the full range of repayment plans.';
+    return {
+      title: 'Full repayment plan eligibility',
+      subtitle,
+      buckets: [
+        { label: 'All of your loans', plans: fullOwn }
+      ],
+      notes: [
+        'ICR and PAYE are available through July 2028 and July 2027 respectively — new enrollment will close after those dates.',
+        !payeEligible && answers.pre2007 === 'yes' ? 'You are not eligible for PAYE because you had federal loans before October 1, 2007.' : null,
+        !payeEligible && answers.post2011 === 'no' || answers.post2011 === 'inferred_no' ? 'You are not eligible for PAYE because you did not receive a loan after October 1, 2011.' : null,
+        'Time spent in IBR, ICR, or PAYE counts toward RAP\'s 30-year forgiveness clock if you switch to RAP. Switching to RAP is a long-term decision — time in RAP does not count toward IBR\'s 20–25 year forgiveness clock if you switch back.',
+      ].filter(Boolean),
+      formulas: fullOwn,
+    };
+  }
+
+  // ── CASE 4: no new borrowing, unconsolidated PPL ──────────────────────────
+  if (!newBorrow && hasPPL && pplStatus === 'unconsolidated') {
+    return {
+      title: 'Pre-July 1, 2026 loans — unconsolidated Parent PLUS Loans',
+      subtitle: 'Unconsolidated Parent PLUS Loans are not eligible for income-driven repayment plans. Your other loans retain full eligibility.',
+      buckets: [
+        { label: 'Your own loans (not PPL)', plans: fullOwn },
+        { label: 'Your unconsolidated Parent PLUS Loans', plans: ['tiered'] },
+      ],
+      notes: [
+        'Unconsolidated Parent PLUS Loans cannot access any income-driven plan.',
+        !payeEligible && answers.pre2007 === 'yes' ? 'You are not eligible for PAYE on your own loans because you had federal loans before October 1, 2007.' : null,
+        !payeEligible && answers.post2011 === 'no' || answers.post2011 === 'inferred_no' ? 'You are not eligible for PAYE because you did not receive a loan after October 1, 2011.' : null,
+        'ICR and PAYE on your own loans are available through July 2028 and July 2027 respectively.',
+        'Time spent in IBR, ICR, or PAYE counts toward RAP\'s 30-year forgiveness clock if you switch to RAP. Switching to RAP is a long-term decision — time in RAP does not count toward IBR\'s 20–25 year forgiveness clock if you switch back.',
+      ].filter(Boolean),
+      formulas: [...new Set([...fullOwn, 'tiered'])],
+    };
+  }
+
+  // ── CASE 5: no new borrowing, consolidated PPL before 7/1 ─────────────────
+  if (!newBorrow && hasPPL && pplStatus === 'consolidated') {
+    return {
+      title: 'Pre-July 1, 2026 loans — consolidated Parent PLUS Loans',
+      subtitle: 'Consolidation loans containing a Parent PLUS Loan have a specific eligibility pathway. Your other loans retain full eligibility.',
+      buckets: [
+        { label: 'Your own loans (not in a PPL consolidation)', plans: fullOwn },
+        { label: 'Your consolidation containing a PPL (with or without other loans)', plans: ['icr_to_ibr','tiered'] },
+      ],
+      notes: [
+        'The ICR → IBR pathway is the only income-driven route for consolidations containing a PPL. You must make at least one qualifying payment under ICR before you can switch to IBR. Both ICR and IBR qualify for PSLF.',
+        'RAP and PAYE are not available for consolidations containing a PPL.',
+        'ICR on your PPL consolidation is available through July 2028 only.',
+        !payeEligible && answers.pre2007 === 'yes' ? 'You are not eligible for PAYE on your own loans because you had federal loans before October 1, 2007.' : null,
+        !payeEligible && answers.post2011 === 'no' || answers.post2011 === 'inferred_no' ? 'You are not eligible for PAYE on your own loans because you did not receive a loan after October 1, 2011.' : null,
+        'Time spent in IBR, ICR, or PAYE counts toward RAP\'s 30-year forgiveness clock if you switch to RAP. Switching to RAP is a long-term decision — time in RAP does not count toward IBR\'s 20–25 year forgiveness clock if you switch back.',
+      ].filter(Boolean),
+      formulas: [...new Set([...fullOwn, 'icr_to_ibr', 'tiered'])],
+    };
+  }
+
+  return null;
+}
+
+// ─── RENDER ───────────────────────────────────────────────────────────────────
+function progressPct() {
+  const steps = ['q_newborrow','q_hasppl','q_pplstatus','q_pre2007','q_post2011','q_pre2014'];
+  const idx = steps.indexOf(current);
+  if (current === 'result') return 100;
+  return Math.round(((idx+1)/steps.length)*100);
+}
+
+function progressBar() {
+  const steps = ['q_newborrow','q_hasppl','q_pplstatus','q_pre2007','q_post2011','q_pre2014'];
+  const idx = current === 'result' ? steps.length : steps.indexOf(current);
+  const label = current === 'result' ? 'Results' : `Question ${idx+1} of up to 6`;
+  const pct = Math.round(((idx+1)/steps.length)*100);
+  return `<div class="prog-wrap">
+    <div class="prog-bg"><div class="prog-fill" style="width:${pct}%"></div></div>
+    <span class="prog-label">${label}</span>
+  </div>`;
+}
+
+function renderQuestion(qkey) {
+  const q = QUESTIONS[qkey];
+  return `${progressBar()}
+    <div class="intro-strip">This tool covers <strong>borrower and loan type eligibility</strong>. Payment formulas are shown at the end of your results.</div>
+    <div class="q-body">
+      <div class="step-eyebrow">${q.stepLabel}</div>
+      <div class="q-text">${q.text}</div>
+      ${q.sub ? `<div class="q-sub">${q.sub}</div>` : ''}
+      <div class="btn-group">
+        ${q.choices.map(c => `
+          <button class="btn-choice" onclick="answer('${qkey}','${c.value}')">
+            ${c.label}
+            ${c.sub ? `<span class="btn-sub">${c.sub}</span>` : ''}
+          </button>`).join('')}
+      </div>
+    </div>
+    <div class="nav-row">
+      ${history.length > 0 ? `<button class="btn-back" onclick="goBack()">← Back</button>` : '<span></span>'}
+      <span></span>
+    </div>`;
+}
+
+function renderPlanRow(planKey) {
+  const p = PLAN_DATA[planKey];
+  if (!p) return '';
+  const pslfClass = p.pslf === true ? 'pslf-yes' : p.pslf === 'maybe' ? 'pslf-maybe' : 'pslf-no';
+  const badgeClass = p.pslf === true ? 'yes' : p.pslf === 'maybe' ? 'maybe' : 'no';
+  const badgeText = p.pslf === true ? 'PSLF ✓' : p.pslf === 'maybe' ? 'PSLF maybe' : 'Not PSLF';
+  return `<div class="plan-row ${pslfClass}">
+    <span class="plan-badge ${badgeClass}">${badgeText}</span>
+    <div>
+      <div class="plan-name">${p.name}</div>
+      ${p.note ? `<div class="plan-note">${p.note}</div>` : ''}
+    </div>
+  </div>`;
+}
+
+function renderResult() {
+  const r = getResult();
+  if (!r) return `<div class="result-body"><p>Something went wrong. <button onclick="restart()">Start over</button></p></div>`;
+
+  const bucketsHTML = r.buckets.map(b => `
+    <div class="loan-bucket">
+      <div class="bucket-label">${b.label}</div>
+      ${b.plans.map(renderPlanRow).join('')}
+    </div>`).join('');
+
+  const notesHTML = r.notes.map(n => `<div class="note-box"><p>${n}</p></div>`).join('');
+
+  const formulasHTML = r.formulas
+    .filter(k => PLAN_DATA[k] && PLAN_DATA[k].formula)
+    .map(k => {
+      const f = PLAN_DATA[k].formula;
+      return `<div class="formula-item">
+        <div class="formula-name">${f.name}</div>
+        <div class="formula-text">${f.calc.replace(/\n/g,'<br>')}</div>
+        ${f.example ? `<div class="formula-example">${f.example.replace(/\n/g,'<br>')}</div>` : ''}
+        ${f.note ? `<div class="plan-note" style="margin-top:6px;font-size:12px">${f.note}</div>` : ''}
+      </div>`;
+    }).join('');
+
+  return `${progressBar()}
+    <div class="result-body">
+      <div class="result-title">${r.title}</div>
+      <div class="result-subtitle">${r.subtitle}</div>
+      ${bucketsHTML}
+      ${notesHTML}
+      <div class="reminder"><strong>Remember:</strong> This reflects your eligibility based on your answers. For questions or more information, visit us in the <a href="https://www.facebook.com/groups/pslfprogramsupport" target="_blank">PSLF Program Support Group on Facebook</a>. Not legal advice.</div>
+      <div class="formula-section">
+        <button class="formula-toggle" onclick="toggleFormulas(this)">
+          <span>Show payment formulas for your eligible plans</span><span>▼</span>
+        </button>
+        <div class="formula-content">${formulasHTML}</div>
+      </div>
+    </div>
+    <div class="nav-row">
+      <button class="btn-back" onclick="goBack()">← Back</button>
+      <button class="btn-restart" onclick="restart()">Start over</button>
+    </div>`;
+}
+
+function toggleFormulas(btn) {
+  const c = btn.nextElementSibling;
+  c.classList.toggle('open');
+  btn.querySelector('span:last-child').textContent = c.classList.contains('open') ? '▲' : '▼';
+}
+
+function startQuiz() {
+  history.push('intro');
+  current = 'q_newborrow';
+  render();
+}
+
+function render() {
+  const card = document.getElementById('quiz-card');
+  if (current === 'intro') {
+    card.innerHTML = renderIntro();
+  } else if (current === 'result') {
+    card.innerHTML = renderResult();
+  } else {
+    card.innerHTML = renderQuestion(current);
+  }
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+
+function answer(qkey, value) {
+  const next = QUESTIONS[qkey].onAnswer(value);
+  history.push(current);
+  current = next;
+  render();
+}
+
+function goBack() {
+  if (history.length > 0) { current = history.pop(); render(); }
+}
+
+function restart() {
+  answers = {}; history = []; current = 'intro'; render();
+}
+
+function renderIntro() {
+  return `<div class="prog-wrap">
+    <div class="prog-bg"><div class="prog-fill" style="width:0%"></div></div>
+    <span class="prog-label">Before you begin</span>
+  </div>
+  <div class="q-body">
+    <div class="step-eyebrow">Important — read before starting</div>
+    <div class="q-text">This tool applies to Direct Loans only.</div>
+    <div class="q-sub">All federal loans issued since 2010 are Direct Loans. If your loans are older, check your loan type before continuing.</div>
+
+    <div style="margin-bottom:20px">
+      <div style="font-size:13px;font-weight:700;color:var(--navy);margin-bottom:10px;text-transform:uppercase;letter-spacing:.06em">✓ Covered by this tool — Direct Loans</div>
+      <div style="background:var(--pslf-bg);border:1px solid var(--pslf-bdr);border-radius:10px;padding:16px 18px">
+        <ul style="list-style:none;display:flex;flex-direction:column;gap:8px">
+          <li style="font-size:14px;color:var(--text);padding-left:16px;position:relative"><span style="position:absolute;left:0;color:var(--pslf)">•</span><strong>Direct Subsidized Loans</strong> — for undergraduate students with financial need; interest is covered by the government during school</li>
+          <li style="font-size:14px;color:var(--text);padding-left:16px;position:relative"><span style="position:absolute;left:0;color:var(--pslf)">•</span><strong>Direct Unsubsidized Loans</strong> — for undergraduate and graduate students; interest accrues immediately</li>
+          <li style="font-size:14px;color:var(--text);padding-left:16px;position:relative"><span style="position:absolute;left:0;color:var(--pslf)">•</span><strong>Direct Parent PLUS Loans</strong> — credit-based loans for parents of dependent undergraduate students</li>
+          <li style="font-size:14px;color:var(--text);padding-left:16px;position:relative"><span style="position:absolute;left:0;color:var(--pslf)">•</span><strong>Direct Grad PLUS Loans</strong> — credit-based loans for graduate and professional degree students</li>
+          <li style="font-size:14px;color:var(--text);padding-left:16px;position:relative"><span style="position:absolute;left:0;color:var(--pslf)">•</span><strong>Direct Consolidation Loans</strong> — combines multiple existing federal student loans into one fixed-rate loan</li>
+        </ul>
+      </div>
+    </div>
+
+    <div style="margin-bottom:24px">
+      <div style="font-size:13px;font-weight:700;color:var(--muted);margin-bottom:10px;text-transform:uppercase;letter-spacing:.06em">✗ Not covered by this tool</div>
+      <div style="background:var(--other-bg);border:1px solid var(--other-bdr);border-radius:10px;padding:16px 18px">
+        <ul style="list-style:none;display:flex;flex-direction:column;gap:8px">
+          <li style="font-size:14px;color:var(--text);padding-left:16px;position:relative"><span style="position:absolute;left:0;color:var(--muted)">•</span><strong>Federal Family Education Loan (FFEL) Program</strong> — the primary federal system from 1965 to 2010; private banks issued the loans with a government guarantee. Includes FFEL Subsidized and Unsubsidized Stafford Loans, FFEL Parent PLUS Loans, FFEL Grad PLUS Loans, and FFEL Consolidation Loans</li>
+          <li style="font-size:14px;color:var(--text);padding-left:16px;position:relative"><span style="position:absolute;left:0;color:var(--muted)">•</span><strong>Federal Perkins Loans</strong> — low-interest campus-based loans for high-need students; program expired September 2017</li>
+          <li style="font-size:14px;color:var(--text);padding-left:16px;position:relative"><span style="position:absolute;left:0;color:var(--muted)">•</span><strong>Health Education Assistance Loans (HEAL)</strong> — targeted medical and health professions; closed to new borrowers in 1998</li>
+          <li style="font-size:14px;color:var(--text);padding-left:16px;position:relative"><span style="position:absolute;left:0;color:var(--muted)">•</span>Any other non-Direct loan type</li>
+        </ul>
+        <div style="margin-top:12px;padding-top:12px;border-top:1px solid var(--other-bdr);font-size:13px;color:var(--muted);line-height:1.6">
+          If you have FFEL, Perkins, or other non-Direct loans, consolidating into a Direct Loan may give you access to these plans and PSLF. Post a question in our <a href="https://www.facebook.com/groups/pslfprogramsupport" target="_blank" style="color:var(--teal)">PSLF Program Support Group</a> for guidance.
+        </div>
+      </div>
+    </div>
+
+    <button class="btn-restart" style="width:100%;padding:16px;font-size:16px" onclick="startQuiz()">I have Direct Loans — start the tool →</button>
+  </div>`;
+}
+
+render();
+</script>
+</body>
+</html>
