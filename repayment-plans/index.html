@@ -203,7 +203,7 @@ function getPlans(answers) {
   const pre2007  = answers.pre2007 === 'yes';
   const post2011 = answers.post2011 === 'yes';
 
-  const payeEligible = !pre2007 && post2011 === 'yes';
+  const payeEligible = !pre2007 && post2011;
   const ibrKey = pre2014 ? 'ibr_old' : 'ibr_new';
 
   return { payeEligible, ibrKey };
