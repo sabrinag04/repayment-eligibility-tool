@@ -217,8 +217,8 @@ const PLAN_DATA = {
     formula: {
       name: 'New IBR',
       calc: 'Monthly payment = (AGI − 150% of poverty line for your family size) × 10% ÷ 12',
-      example: '<strong>Example:</strong> $50,000 income, family of 3\nPoverty line (150%): $37,290\nDiscretionary income: $50,000 − $37,290 = $12,710\nAnnual payment: $12,710 × 10% = $1,271\nMonthly payment: <strong>$105.92</strong>',
-      note: '2025 poverty lines (150%): 1 person = $21,870 · 2 people = $29,580 · 3 people = $37,290 · 4 people = $45,000'
+      example: '<strong>Example:</strong> $50,000 income, family of 3\nPoverty line (150%): $40,980\nDiscretionary income: $50,000 − $40,980 = $9,020\nAnnual payment: $9,020 × 10% = $902\nMonthly payment: <strong>$75.17</strong>',
+      note: '2026 poverty lines (150%): 1 person = $23,940 · 2 people = $32,460 · 3 people = $40,980 · 4 people = $49,500'
     }
   },
   ibr_old: {
@@ -228,8 +228,8 @@ const PLAN_DATA = {
     formula: {
       name: 'Original IBR',
       calc: 'Monthly payment = (AGI − 150% of poverty line for your family size) × 15% ÷ 12',
-      example: '<strong>Example:</strong> $50,000 income, family of 3\nPoverty line (150%): $37,290\nDiscretionary income: $50,000 − $37,290 = $12,710\nAnnual payment: $12,710 × 15% = $1,906.50\nMonthly payment: <strong>$158.88</strong>',
-      note: '2025 poverty lines (150%): 1 person = $21,870 · 2 people = $29,580 · 3 people = $37,290 · 4 people = $45,000'
+      example: '<strong>Example:</strong> $50,000 income, family of 3\nPoverty line (150%): $40,980\nDiscretionary income: $50,000 − $40,980 = $9,020\nAnnual payment: $9,020 × 15% = $1,353\nMonthly payment: <strong>$112.75</strong>',
+      note: '2026 poverty lines (150%): 1 person = $23,940 · 2 people = $32,460 · 3 people = $40,980 · 4 people = $49,500'
     }
   },
   paye: {
@@ -250,8 +250,8 @@ const PLAN_DATA = {
     formula: {
       name: 'ICR',
       calc: 'Lesser of:\n(A) (AGI − 100% of poverty line) × 20% ÷ 12\n(B) The fixed monthly payment over 12 years based on your balance and interest rate, multiplied by an income percentage factor (IPF) based on your AGI — updated annually by the Department of Education\n\nUse whichever calculation results in a lower payment. Option B is close to a 12-year standard payment but not exactly — the income adjustment means it varies by borrower. Use the loan simulator at studentaid.gov to calculate Option B accurately.',
-      example: '<strong>Example (Option A):</strong> $50,000 income, family of 3\nPoverty line (100%): $24,860\nDiscretionary income: $50,000 − $24,860 = $25,140\nAnnual payment: $25,140 × 20% = $5,028\nMonthly payment: <strong>$418.00</strong>\n\nFor Option B, use the loan simulator at studentaid.gov — it requires your specific balance, interest rate, and income percentage factor.',
-      note: '2025 poverty lines (100%): 1 person = $14,580 · 2 people = $19,720 · 3 people = $24,860 · 4 people = $30,000'
+      example: '<strong>Example (Option A):</strong> $50,000 income, family of 3\nPoverty line (100%): $27,320\nDiscretionary income: $50,000 − $27,320 = $22,680\nAnnual payment: $22,680 × 20% = $4,536\nMonthly payment: <strong>$378.00</strong>\n\nFor Option B, use the loan simulator at studentaid.gov — it requires your specific balance, interest rate, and income percentage factor.',
+      note: '2026 poverty lines (100%): 1 person = $15,960 · 2 people = $21,640 · 3 people = $27,320 · 4 people = $33,000'
     }
   },
   icr_to_ibr: {
@@ -322,7 +322,6 @@ function getResult() {
     'icr',
     'rap',
     'standard_10',
-    'tiered',
     'extended_std',
     'extended_grad',
   ];
@@ -384,19 +383,19 @@ function getResult() {
   if (!newBorrow && hasPPL && pplStatus === 'unconsolidated') {
     return {
       title: 'Pre-July 1, 2026 loans — unconsolidated Parent PLUS Loans',
-      subtitle: 'Unconsolidated Parent PLUS Loans are not eligible for income-driven repayment plans. Your other loans retain full eligibility.',
+      subtitle: 'Unconsolidated Parent PLUS Loans are not eligible for income-driven repayment plans, but are eligible for legacy standard, extended, and graduated plans. Your other loans retain full eligibility.',
       buckets: [
         { label: 'Your own loans (not PPL)', plans: fullOwn },
-        { label: 'Your unconsolidated Parent PLUS Loans', plans: ['tiered'] },
+        { label: 'Your unconsolidated Parent PLUS Loans', plans: ['standard_10', 'extended_std', 'extended_grad'] },
       ],
       notes: [
-        'Unconsolidated Parent PLUS Loans cannot access any income-driven plan.',
+        'Unconsolidated Parent PLUS Loans cannot access any income-driven plan, but are eligible for legacy standard (fixed 10-year term, since they are not consolidated), extended standard, and extended graduated.',
         !payeEligible && answers.pre2007 === 'yes' ? 'You are not eligible for PAYE on your own loans because you had federal loans before October 1, 2007.' : null,
         !payeEligible && answers.post2011 === 'no' || answers.post2011 === 'inferred_no' ? 'You are not eligible for PAYE because you did not receive a loan after October 1, 2011.' : null,
         'ICR and PAYE on your own loans are available through July 2028 and July 2027 respectively.',
         'Time spent in IBR, ICR, or PAYE counts toward RAP\'s 30-year forgiveness clock if you switch to RAP. Switching to RAP is a long-term decision — time in RAP does not count toward IBR\'s 20–25 year forgiveness clock if you switch back.',
       ].filter(Boolean),
-      formulas: [...new Set([...fullOwn, 'tiered'])],
+      formulas: [...new Set([...fullOwn, 'standard_10', 'extended_std', 'extended_grad'])],
     };
   }
 
@@ -407,7 +406,7 @@ function getResult() {
       subtitle: 'Consolidation loans containing a Parent PLUS Loan have a specific eligibility pathway. Your other loans retain full eligibility.',
       buckets: [
         { label: 'Your own loans (not in a PPL consolidation)', plans: fullOwn },
-        { label: 'Your consolidation containing a PPL (with or without other loans)', plans: ['icr_to_ibr','tiered'] },
+        { label: 'Your consolidation containing a PPL (with or without other loans)', plans: ['icr_to_ibr','standard_10'] },
       ],
       notes: [
         'The ICR → IBR pathway is the only income-driven route for consolidations containing a PPL. You must make at least one qualifying payment under ICR before you can switch to IBR. Both ICR and IBR qualify for PSLF.',
@@ -417,7 +416,7 @@ function getResult() {
         !payeEligible && answers.post2011 === 'no' || answers.post2011 === 'inferred_no' ? 'You are not eligible for PAYE on your own loans because you did not receive a loan after October 1, 2011.' : null,
         'Time spent in IBR, ICR, or PAYE counts toward RAP\'s 30-year forgiveness clock if you switch to RAP. Switching to RAP is a long-term decision — time in RAP does not count toward IBR\'s 20–25 year forgiveness clock if you switch back.',
       ].filter(Boolean),
-      formulas: [...new Set([...fullOwn, 'icr_to_ibr', 'tiered'])],
+      formulas: [...new Set([...fullOwn, 'icr_to_ibr', 'standard_10'])],
     };
   }
 
